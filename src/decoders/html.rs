@@ -117,7 +117,7 @@ pub fn html_to_text(input: &str) -> String {
                                 is_after_space = false;
                                 is_new_line = true;
                             }
-                            Some(tag) if tag.eq_ignore_ascii_case(b"head") => {
+                            Some(tag) if tag.eq_ignore_ascii_case(b"head") || tag.eq_ignore_ascii_case(b"style")=> {
                                 in_head = !is_tag_close;
                             }
                             _ => (),
