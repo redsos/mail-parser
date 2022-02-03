@@ -528,6 +528,13 @@ impl<'x> HeaderName<'x> {
             HeaderName::Other(name) => HeaderName::Other(name.clone().into_owned().into()),
         }
     }
+
+    pub fn unwrap(self) -> String {
+        match self {
+            HeaderName::Rfc(header) => header.as_str().to_owned(),
+            HeaderName::Other(name) => name.into_owned(),
+        }
+    }
 }
 
 /// A header field
@@ -1497,6 +1504,7 @@ impl<'x> Part<'x, MessageAttachment<'x>> {
     }
 }
 
+#[cfg(feature = "serde_support")]
 impl<'x> Serialize for MessageAttachment<'x> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1511,6 +1519,7 @@ impl<'x> Serialize for MessageAttachment<'x> {
     }
 }
 
+#[cfg(feature = "serde_support")]
 impl<'x, 'de> Deserialize<'de> for MessageAttachment<'x> {
     fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
     where
