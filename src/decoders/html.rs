@@ -8,6 +8,7 @@
  * option. This file may not be copied, modified, or distributed
  * except according to those terms.
  */
+use std::borrow::Cow;
 
 use std::char::REPLACEMENT_CHARACTER;
 
@@ -69,8 +70,30 @@ pub fn add_html_token(result: &mut String, token: &[u8], add_space: bool) {
 }
 
 pub fn html_to_text(input: &str) -> String {
-    let mut result = String::with_capacity(input.len());
-    let input = input.as_bytes();
+    let mut tmp = Cow::from(input);
+    
+    for _ in input.chars() { // 移除带属性的 style 与 script 标签
+        if let Some(b) = tmp.to_ascii_lowercase().find("<style ") {
+            if let Some(bs) = tmp.get(b..) {
+                if let Some(closed) = bs.to_ascii_lowercase().find("</style>") {
+                    tmp = tmp.replace(bs.get(..closed + 8).unwrap(), "").into();
+                }
+            }
+        }
+        if let Some(b) = tmp.to_ascii_lowercase().find("<script ") {
+            if let Some(bs) = tmp.get(b..) {
+                if let Some(closed) = bs.to_ascii_lowercase().find("</script>") {
+                    tmp = tmp.replace(bs.get(..closed + 9).unwrap(), "").into();
+                }
+            }
+        }
+    }
+    
+    let mut result = String::with_capacity(tmp.len());
+    let input = tmp.as_bytes();
+    
+    // let mut result = String::with_capacity(input.len());
+    // let input = input.as_bytes();
 
     let mut in_tag = false;
     let mut in_head = false;
@@ -117,7 +140,7 @@ pub fn html_to_text(input: &str) -> String {
                                 is_after_space = false;
                                 is_new_line = true;
                             }
-                            Some(tag) if tag.eq_ignore_ascii_case(b"head") || tag.eq_ignore_ascii_case(b"style")=> {
+                            Some(tag) if tag.eq_ignore_ascii_case(b"head") || || tag.eq_ignore_ascii_case(b"style") || tag.eq_ignore_ascii_case(b"script") => {
                                 in_head = !is_tag_close;
                             }
                             _ => (),
